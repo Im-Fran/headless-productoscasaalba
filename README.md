@@ -68,6 +68,62 @@ Para habilitar la protección CAPTCHA:
 
 El plugin genera automáticamente un secret key seguro durante la activación. Puedes personalizarlo desde **Headless > Configuración**.
 
+### 4. Redirección Automática al Frontend (Opcional)
+
+El plugin incluye una funcionalidad de redirección automática inspirada en el [Headless Mode plugin](https://wordpress.org/plugins/headless-mode/), que permite redirigir todas las solicitudes del frontend de WordPress a tu aplicación headless.
+
+#### Características de la Redirección
+
+- **Redirección Inteligente**: Solo afecta a visitantes no autenticados o usuarios sin permisos de edición
+- **Protección del Backend**: El panel de administración y las APIs REST permanecen accesibles
+- **Preservación de Rutas**: Las rutas y parámetros de consulta se preservan en la redirección
+- **Filtros Personalizables**: Permite personalizar el comportamiento mediante hooks de WordPress
+
+#### Cómo Habilitar
+
+1. Ve a **Headless > Configuración**
+2. En la sección "Configuración del Frontend Headless":
+   - Ingresa la URL de tu frontend (ej: `https://productoscasaalba.cl`)
+   - Marca la casilla "Habilitar Redirección Automática"
+3. Guarda los cambios
+
+#### Comportamiento
+
+Cuando está habilitada:
+- ✅ Los visitantes que accedan a `https://tu-wordpress.com/productos` serán redirigidos a `https://productoscasaalba.cl/productos`
+- ✅ Las APIs REST (`/wp-json/*`) siguen funcionando normalmente
+- ✅ El panel de administración (`/wp-admin`) permanece accesible
+- ✅ Los usuarios con permisos de edición pueden acceder al frontend de WordPress
+- ✅ Los procesos cron y OAuth no se ven afectados
+
+#### Personalización Avanzada
+
+Puedes personalizar el comportamiento usando filtros:
+
+```php
+// Deshabilitar redirección para usuarios específicos
+add_filter('casa_alba_headless_disable_redirect', function($disable) {
+    // Permitir acceso a usuarios con rol específico
+    if (current_user_can('manage_woocommerce')) {
+        return true;
+    }
+    return $disable;
+});
+
+// Modificar la URL de redirección antes de redirigir
+add_filter('casa_alba_headless_will_redirect', function($should_redirect, $new_url) {
+    // No redirigir ciertas rutas
+    if (strpos($new_url, '/especial') !== false) {
+        return false;
+    }
+    return $should_redirect;
+}, 10, 2);
+```
+
+#### Créditos
+
+Esta funcionalidad está inspirada en el excelente trabajo del [Headless Mode plugin](https://wordpress.org/plugins/headless-mode/). Agradecemos a sus autores por la inspiración y el concepto.
+
 ## APIs Disponibles
 
 ### Autenticación

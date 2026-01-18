@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [1.1.0] - 2026-01-18
+
+### ✨ Agregado
+
+#### Redirección Automática al Frontend
+- Implementada funcionalidad de redirección automática al frontend headless (inspirada en Headless Mode plugin)
+- Opción configurable para habilitar/deshabilitar redirección desde el panel de administración
+- Redirección inteligente que preserva rutas y parámetros de consulta
+- Protección automática del panel de administración y APIs REST
+- Los usuarios con permisos de edición pueden seguir accediendo al frontend de WordPress
+- Filtros personalizables: `casa_alba_headless_disable_redirect` y `casa_alba_headless_will_redirect`
+- Documentación completa sobre uso y personalización
+
+### 🙏 Créditos
+- Funcionalidad de redirección inspirada en [Headless Mode plugin](https://wordpress.org/plugins/headless-mode/)
+
 ## [1.0.0] - 2026-01-18
 
 ### 🎉 Lanzamiento Inicial - Plugin Consolidado

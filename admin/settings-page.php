@@ -22,6 +22,11 @@ if (isset($_POST['casa_alba_auth_save_settings']) && check_admin_referer('casa_a
     update_option('casa_alba_auth_rate_limit_lockout_duration', intval($_POST['rate_limit_lockout_duration']));
     update_option('casa_alba_auth_session_limit', intval($_POST['session_limit']));
 
+    // Frontend configuration
+    update_option('casa_alba_frontend_url', esc_url_raw($_POST['frontend_url']));
+    update_option('casa_alba_enable_frontend_redirect', isset($_POST['enable_frontend_redirect']) ? 1 : 0);
+    update_option('casa_alba_ignored_asns', sanitize_text_field($_POST['ignored_asns']));
+
     echo '<div class="notice notice-success"><p>' . __('Configuración guardada correctamente', 'casa-alba-headless-auth') . '</p></div>';
 }
 
@@ -38,6 +43,9 @@ $rate_limit_max_attempts = get_option('casa_alba_auth_rate_limit_max_attempts', 
 $rate_limit_window = get_option('casa_alba_auth_rate_limit_window', 900);
 $rate_limit_lockout_duration = get_option('casa_alba_auth_rate_limit_lockout_duration', 1800);
 $session_limit = get_option('casa_alba_auth_session_limit', 5);
+$frontend_url = get_option('casa_alba_frontend_url', 'https://productoscasaalba.cl');
+$enable_frontend_redirect = get_option('casa_alba_enable_frontend_redirect', 0);
+$ignored_asns = get_option('casa_alba_ignored_asns', '');
 ?>
 
 <div class="wrap">
@@ -189,6 +197,57 @@ $session_limit = get_option('casa_alba_auth_session_limit', 5);
                 <td>
                     <input type="number" name="session_limit" id="session_limit" value="<?php echo esc_attr($session_limit); ?>" class="small-text" />
                     <p class="description"><?php _e('Número máximo de sesiones activas por usuario (0 = ilimitado)', 'casa-alba-headless-auth'); ?></p>
+                </td>
+            </tr>
+        </table>
+
+        <h2><?php _e('Configuración del Frontend Headless', 'casa-alba-headless-auth'); ?></h2>
+        <p class="description">
+            <?php _e('Configuración para integración con el frontend headless. Esta funcionalidad está inspirada en el plugin Headless Mode.', 'casa-alba-headless-auth'); ?>
+            <br>
+            <em><?php _e('Créditos: Headless Mode plugin (https://wordpress.org/plugins/headless-mode/)', 'casa-alba-headless-auth'); ?></em>
+        </p>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="frontend_url"><?php _e('URL del Frontend', 'casa-alba-headless-auth'); ?></label>
+                </th>
+                <td>
+                    <input type="url" name="frontend_url" id="frontend_url" value="<?php echo esc_attr($frontend_url); ?>" class="regular-text" placeholder="https://productoscasaalba.cl" />
+                    <p class="description">
+                        <?php _e('URL completa de tu aplicación frontend headless. Esta URL se usará para redirecciones de checkout y páginas de confirmación de pedido.', 'casa-alba-headless-auth'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="enable_frontend_redirect"><?php _e('Habilitar Redirección Automática', 'casa-alba-headless-auth'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="enable_frontend_redirect" id="enable_frontend_redirect" value="1" <?php checked($enable_frontend_redirect, 1); ?> />
+                        <?php _e('Redirigir automáticamente todas las solicitudes del frontend de WordPress al frontend headless', 'casa-alba-headless-auth'); ?>
+                    </label>
+                    <p class="description">
+                        <?php _e('⚠️ Cuando está habilitado, los visitantes no autenticados (o usuarios sin capacidad de editar posts) serán redirigidos automáticamente al frontend headless. Los usuarios con permisos de edición podrán acceder normalmente al backend de WordPress.', 'casa-alba-headless-auth'); ?>
+                        <br>
+                        <strong><?php _e('Nota:', 'casa-alba-headless-auth'); ?></strong> <?php _e('El panel de administración y las APIs REST siempre permanecerán accesibles.', 'casa-alba-headless-auth'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="ignored_asns"><?php _e('ASNs Ignorados (Cloudflare)', 'casa-alba-headless-auth'); ?></label>
+                </th>
+                <td>
+                    <input type="text" name="ignored_asns" id="ignored_asns" value="<?php echo esc_attr($ignored_asns); ?>" class="regular-text" placeholder="13335, 15169, 16509" />
+                    <p class="description">
+                        <?php _e('Lista de ASNs (Autonomous System Numbers) de Cloudflare que no serán redirigidos, separados por comas. Útil para permitir el acceso a APIs específicas o servicios de monitoreo.', 'casa-alba-headless-auth'); ?>
+                        <br>
+                        <strong><?php _e('Ejemplo:', 'casa-alba-headless-auth'); ?></strong> <code>13335, 15169, 16509</code>
+                        <br>
+                        <strong><?php _e('Nota:', 'casa-alba-headless-auth'); ?></strong> <?php _e('Cloudflare proporciona el ASN en la cabecera CF-Connecting-ASN. Esta opción solo funciona si tu sitio está detrás de Cloudflare.', 'casa-alba-headless-auth'); ?>
+                    </p>
                 </td>
             </tr>
         </table>

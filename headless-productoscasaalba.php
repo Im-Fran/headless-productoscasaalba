@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Headless Productos Casa Alba
  * Plugin URI: https://productoscasaalba.cl
- * Description: Plugin completo para frontend headless: autenticación JWT con Cloudflare Turnstile, gestión de sesiones, checkout URLs modificadas, y APIs personalizadas para clientes y pedidos.
- * Version: 1.0.0
+ * Description: Plugin completo para frontend headless: autenticación JWT con Cloudflare Turnstile, gestión de sesiones, checkout URLs modificadas, redirección automática al frontend, y APIs personalizadas para clientes y pedidos.
+ * Version: 1.1.0
  * Author: Francisco Solis
  * Author URI: https://franciscosolis.cl
  * License: GPL v3
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('CASA_ALBA_HEADLESS_VERSION', '1.0.0');
+define('CASA_ALBA_HEADLESS_VERSION', '1.1.0');
 define('CASA_ALBA_HEADLESS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CASA_ALBA_HEADLESS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -167,8 +167,145 @@ class Casa_Alba_Headless {
         // Initialize checkout URL modifications
         $this->init_checkout_hooks();
 
+        // Initialize frontend redirect (inspired by Headless Mode plugin)
+        $this->init_frontend_redirect();
+
         // Log initialization
         error_log('Casa Alba Headless: Plugin initialized with frontend URL: ' . $this->frontend_url);
+    }
+
+    /**
+     * Initialize frontend redirect functionality
+     * Inspired by Headless Mode plugin (https://wordpress.org/plugins/headless-mode/)
+     * Credits to the original authors for the redirect concept
+     */
+    private function init_frontend_redirect() {
+        // Hook to intercept frontend requests
+        add_action('parse_request', array($this, 'redirect_to_frontend'), 99);
+    }
+
+    /**
+     * Get ASN from Cloudflare headers
+     *
+     * @return string|null ASN number or null if not available
+     */
+    private function get_cloudflare_asn() {
+        // Cloudflare provides ASN in the CF-Connecting-ASN header
+        if (isset($_SERVER['HTTP_CF_CONNECTING_ASN'])) {
+            return sanitize_text_field($_SERVER['HTTP_CF_CONNECTING_ASN']);
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if the current request ASN should be ignored for redirect
+     *
+     * @return bool True if ASN should be ignored, false otherwise
+     */
+    private function should_ignore_asn() {
+        $asn = $this->get_cloudflare_asn();
+
+        if (empty($asn)) {
+            return false;
+        }
+
+        // Get ignored ASNs from settings
+        $ignored_asns = get_option('casa_alba_ignored_asns', '');
+
+        if (empty($ignored_asns)) {
+            return false;
+        }
+
+        // Convert comma-separated string to array and trim whitespace
+        $asn_list = array_map('trim', explode(',', $ignored_asns));
+
+        // Check if current ASN is in the ignored list
+        if (in_array($asn, $asn_list)) {
+            error_log('Casa Alba Headless: Ignoring redirect for ASN: ' . $asn);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Redirect frontend requests to the headless frontend
+     * This prevents users from accessing the WordPress frontend directly
+     *
+     * Inspired by Headless Mode plugin functionality
+     * Credits: Headless Mode plugin (https://wordpress.org/plugins/headless-mode/)
+     */
+    public function redirect_to_frontend() {
+        // Check if redirect is enabled in settings
+        $redirect_enabled = get_option('casa_alba_enable_frontend_redirect', false);
+
+        if (!$redirect_enabled) {
+            return;
+        }
+
+        // Check if the request ASN should be ignored
+        if ($this->should_ignore_asn()) {
+            return;
+        }
+
+        // Allow filter to disable redirect (e.g., for logged-in editors)
+        $disable_redirect = apply_filters('casa_alba_headless_disable_redirect', !current_user_can('edit_posts'));
+
+        if (false === $disable_redirect) {
+            return;
+        }
+
+        global $wp;
+
+        // Don't redirect if:
+        // - In admin area
+        // - Processing REST API request
+        // - Processing GraphQL request
+        // - Running cron
+        // - OAuth request
+        $should_skip = (
+            is_admin() ||
+            defined('REST_REQUEST') ||
+            defined('GRAPHQL_HTTP_REQUEST') ||
+            defined('DOING_CRON') ||
+            !empty($wp->query_vars['rest_oauth1'])
+        );
+
+        if ($should_skip) {
+            return;
+        }
+
+        // Check if frontend URL is configured
+        if (empty($this->frontend_url) || $this->frontend_url === 'https://productoscasaalba.cl') {
+            // Only redirect if explicitly configured
+            $configured_url = get_option('casa_alba_frontend_url');
+            if (empty($configured_url)) {
+                return;
+            }
+        }
+
+        // Build the redirect URL
+        $new_url = trailingslashit($this->frontend_url);
+
+        // Append the request path
+        if (!empty($wp->request)) {
+            $new_url .= $wp->request;
+        }
+
+        // Append query string if present
+        if (!empty($_SERVER['QUERY_STRING'])) {
+            $new_url .= '?' . $_SERVER['QUERY_STRING'];
+        }
+
+        // Allow filtering the redirect behavior
+        $should_redirect = apply_filters('casa_alba_headless_will_redirect', true, $new_url);
+
+        if ($should_redirect) {
+            error_log('Casa Alba Headless: Redirecting to frontend - ' . $new_url);
+            wp_redirect($new_url, 301);
+            exit;
+        }
     }
 
     /**
@@ -391,6 +528,19 @@ class Casa_Alba_Headless {
             'sanitize_callback' => 'esc_url_raw',
             'default' => 'https://productoscasaalba.cl'
         ));
+
+        // Redirect settings
+        register_setting('casa_alba_headless_settings', 'casa_alba_enable_frontend_redirect', array(
+            'type' => 'boolean',
+            'default' => false
+        ));
+
+        // Ignored ASNs for redirect bypass (comma-separated)
+        register_setting('casa_alba_headless_settings', 'casa_alba_ignored_asns', array(
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => ''
+        ));
     }
 
     /**
@@ -553,6 +703,9 @@ class Casa_Alba_Headless {
         }
         if (!get_option('casa_alba_frontend_url')) {
             add_option('casa_alba_frontend_url', 'https://productoscasaalba.cl');
+        }
+        if (!get_option('casa_alba_ignored_asns')) {
+            add_option('casa_alba_ignored_asns', '');
         }
 
         error_log('Casa Alba Headless: Plugin activated');
