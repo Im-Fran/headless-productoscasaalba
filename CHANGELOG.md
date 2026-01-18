@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [1.1.1] - 2026-01-18
+
+### 🐛 Corregido
+#### Redirección Automática al Frontend
+- Corrección de un bug que impedía la redirección correcta.
+
 ## [1.1.0] - 2026-01-18
 
 ### ✨ Agregado
