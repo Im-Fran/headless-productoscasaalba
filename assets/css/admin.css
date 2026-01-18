@@ -124,3 +124,45 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Update section styles */
+.casa-alba-update-section {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.casa-alba-update-section .form-table th {
+    padding: 10px 10px 10px 0;
+    width: 200px;
+}
+
+.casa-alba-update-section .form-table td {
+    padding: 10px;
+}
+
+.casa-alba-update-notice {
+    border-left-color: #dba617;
+}
+
+#casa-alba-check-updates .dashicons.spin,
+.dashicons.spin {
+    animation: spin 1s linear infinite;
+}
+
+#casa-alba-update-result .notice {
+    margin: 0;
+}
+
+#casa-alba-check-updates,
+#casa-alba-update-now {
+    margin-right: 10px;
+}
+
+#casa-alba-check-updates .dashicons,
+#casa-alba-update-now .dashicons {
+    margin-right: 3px;
+}
+
+

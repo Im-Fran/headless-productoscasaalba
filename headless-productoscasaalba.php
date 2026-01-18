@@ -3,7 +3,7 @@
  * Plugin Name: Headless Productos Casa Alba
  * Plugin URI: https://productoscasaalba.cl
  * Description: Plugin completo para frontend headless: autenticación JWT con Cloudflare Turnstile, gestión de sesiones, checkout URLs modificadas, redirección automática al frontend, y APIs personalizadas para clientes y pedidos.
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: Francisco Solis
  * Author URI: https://franciscosolis.cl
  * License: GPL v3
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('CASA_ALBA_HEADLESS_VERSION', '1.1.1');
+define('CASA_ALBA_HEADLESS_VERSION', '1.2.0');
 define('CASA_ALBA_HEADLESS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CASA_ALBA_HEADLESS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -70,6 +70,11 @@ class Casa_Alba_Headless {
      * Orders API instance
      */
     private $orders_api;
+
+    /**
+     * GitHub Updater instance
+     */
+    private $github_updater;
 
     /**
      * Frontend URL from environment or settings
@@ -129,6 +134,9 @@ class Casa_Alba_Headless {
         // Checkout and WooCommerce API classes
         require_once CASA_ALBA_HEADLESS_PLUGIN_DIR . 'includes/class-customer-api.php';
         require_once CASA_ALBA_HEADLESS_PLUGIN_DIR . 'includes/class-orders-api.php';
+
+        // GitHub Updater
+        require_once CASA_ALBA_HEADLESS_PLUGIN_DIR . 'includes/class-github-updater.php';
     }
 
     /**
@@ -148,6 +156,9 @@ class Casa_Alba_Headless {
         // Initialize WooCommerce API classes
         $this->customer_api = new Casa_Alba_Customer_API();
         $this->orders_api = new Casa_Alba_Orders_API();
+
+        // Initialize GitHub Updater
+        $this->github_updater = Casa_Alba_GitHub_Updater::get_instance();
     }
 
     /**
@@ -537,6 +548,13 @@ class Casa_Alba_Headless {
 
         // Ignored ASNs for redirect bypass (comma-separated)
         register_setting('casa_alba_headless_settings', 'casa_alba_ignored_asns', array(
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => ''
+        ));
+
+        // GitHub token for API requests
+        register_setting('casa_alba_headless_settings', 'casa_alba_github_token', array(
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default' => ''

@@ -61,6 +61,49 @@
             });
         });
 
+        // Check for plugin updates
+        $('#casa-alba-check-updates').on('click', function() {
+            var $button = $(this);
+            var $result = $('#casa-alba-update-result');
+
+            $button.prop('disabled', true).find('.dashicons').addClass('spin');
+            $result.hide();
+
+            $.ajax({
+                url: casaAlbaHeadless.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'casa_alba_check_updates',
+                    nonce: casaAlbaHeadless.nonce
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).find('.dashicons').removeClass('spin');
+
+                    if (response.success) {
+                        var data = response.data;
+                        $('#casa-alba-latest-version').text(data.new_version || data.latest_version);
+                        $('#casa-alba-checked-at').text(data.checked_at || new Date().toLocaleString());
+
+                        if (data.update_available) {
+                            $result.html('<div class="notice notice-warning inline"><p><strong>¡Nueva versión ' + data.new_version + ' disponible!</strong> Recarga la página para ver el botón de actualización.</p></div>').show();
+                            // Reload page to show update button
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            $result.html('<div class="notice notice-success inline"><p>Estás usando la última versión (' + data.current_version + ')</p></div>').show();
+                        }
+                    } else {
+                        $result.html('<div class="notice notice-error inline"><p>Error al verificar actualizaciones: ' + (response.data.message || 'Error desconocido') + '</p></div>').show();
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).find('.dashicons').removeClass('spin');
+                    $result.html('<div class="notice notice-error inline"><p>Error de conexión al verificar actualizaciones</p></div>').show();
+                }
+            });
+        });
+
     });
 
     /**

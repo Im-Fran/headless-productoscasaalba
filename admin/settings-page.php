@@ -27,6 +27,9 @@ if (isset($_POST['casa_alba_auth_save_settings']) && check_admin_referer('casa_a
     update_option('casa_alba_enable_frontend_redirect', isset($_POST['enable_frontend_redirect']) ? 1 : 0);
     update_option('casa_alba_ignored_asns', sanitize_text_field($_POST['ignored_asns']));
 
+    // GitHub configuration
+    update_option('casa_alba_github_token', sanitize_text_field($_POST['github_token']));
+
     echo '<div class="notice notice-success"><p>' . __('Configuración guardada correctamente', 'casa-alba-headless-auth') . '</p></div>';
 }
 
@@ -46,6 +49,7 @@ $session_limit = get_option('casa_alba_auth_session_limit', 5);
 $frontend_url = get_option('casa_alba_frontend_url', 'https://productoscasaalba.cl');
 $enable_frontend_redirect = get_option('casa_alba_enable_frontend_redirect', 0);
 $ignored_asns = get_option('casa_alba_ignored_asns', '');
+$github_token = get_option('casa_alba_github_token', '');
 ?>
 
 <div class="wrap">
@@ -252,8 +256,118 @@ $ignored_asns = get_option('casa_alba_ignored_asns', '');
             </tr>
         </table>
 
+        <h2><?php _e('Configuración de GitHub', 'casa-alba-headless-auth'); ?></h2>
+        <p class="description">
+            <?php _e('Configuración para las actualizaciones automáticas del plugin desde GitHub.', 'casa-alba-headless-auth'); ?>
+        </p>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="github_token"><?php _e('Token de GitHub (opcional)', 'casa-alba-headless-auth'); ?></label>
+                </th>
+                <td>
+                    <input type="password" name="github_token" id="github_token" value="<?php echo esc_attr($github_token); ?>" class="regular-text" autocomplete="off" />
+                    <button type="button" class="button" onclick="toggleGitHubToken()">
+                        <span class="dashicons dashicons-visibility" style="vertical-align: middle;"></span>
+                    </button>
+                    <p class="description">
+                        <?php _e('Token de acceso personal de GitHub para realizar solicitudes autenticadas a la API.', 'casa-alba-headless-auth'); ?>
+                        <br>
+                        <strong><?php _e('Beneficios:', 'casa-alba-headless-auth'); ?></strong>
+                        <ul style="list-style: disc; margin-left: 20px;">
+                            <li><?php _e('Aumenta el límite de solicitudes de 60 a 5,000 por hora', 'casa-alba-headless-auth'); ?></li>
+                            <li><?php _e('Permite acceder a repositorios privados', 'casa-alba-headless-auth'); ?></li>
+                        </ul>
+                        <a href="https://github.com/settings/tokens/new?description=Casa%20Alba%20Headless%20Plugin&scopes=repo" target="_blank">
+                            <?php _e('Crear un token de GitHub →', 'casa-alba-headless-auth'); ?>
+                        </a>
+                        <br>
+                        <em><?php _e('Solo necesitas el permiso "repo" si el repositorio es privado, o ningún permiso para repositorios públicos.', 'casa-alba-headless-auth'); ?></em>
+                    </p>
+                </td>
+            </tr>
+        </table>
+
         <?php submit_button(__('Guardar Configuración', 'casa-alba-headless-auth'), 'primary', 'casa_alba_auth_save_settings'); ?>
     </form>
+
+    <hr>
+
+    <h2><?php _e('Actualizaciones del Plugin', 'casa-alba-headless-auth'); ?></h2>
+    <?php
+    $updater = Casa_Alba_GitHub_Updater::get_instance();
+    $update_status = $updater->get_update_status();
+    ?>
+    <div class="casa-alba-update-section">
+        <table class="form-table">
+            <tr>
+                <th scope="row"><?php _e('Versión Actual', 'casa-alba-headless-auth'); ?></th>
+                <td>
+                    <strong><?php echo esc_html($update_status['current_version']); ?></strong>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php _e('Última Versión Disponible', 'casa-alba-headless-auth'); ?></th>
+                <td>
+                    <strong id="casa-alba-latest-version"><?php echo esc_html($update_status['latest_version']); ?></strong>
+                    <?php if ($update_status['update_available']): ?>
+                        <span class="dashicons dashicons-warning" style="color: #dba617;"></span>
+                        <span style="color: #dba617;"><?php _e('Nueva versión disponible', 'casa-alba-headless-auth'); ?></span>
+                    <?php else: ?>
+                        <span class="dashicons dashicons-yes-alt" style="color: #00a32a;"></span>
+                        <span style="color: #00a32a;"><?php _e('Estás al día', 'casa-alba-headless-auth'); ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php if ($update_status['checked_at']): ?>
+            <tr>
+                <th scope="row"><?php _e('Última Comprobación', 'casa-alba-headless-auth'); ?></th>
+                <td>
+                    <span id="casa-alba-checked-at"><?php echo esc_html($update_status['checked_at']); ?></span>
+                </td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($update_status['release'] && !empty($update_status['release']['published_at'])): ?>
+            <tr>
+                <th scope="row"><?php _e('Fecha de la Última Versión', 'casa-alba-headless-auth'); ?></th>
+                <td>
+                    <?php
+                    $publish_date = new DateTime($update_status['release']['published_at']);
+                    echo esc_html($publish_date->format('d/m/Y H:i'));
+                    ?>
+                </td>
+            </tr>
+            <?php endif; ?>
+        </table>
+
+        <p>
+            <button type="button" class="button" id="casa-alba-check-updates">
+                <span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
+                <?php _e('Comprobar Actualizaciones', 'casa-alba-headless-auth'); ?>
+            </button>
+
+            <?php if ($update_status['update_available']): ?>
+            <?php
+            $update_url = wp_nonce_url(
+                admin_url('update.php?action=upgrade-plugin&plugin=' . urlencode(plugin_basename(CASA_ALBA_HEADLESS_PLUGIN_DIR . 'headless-productoscasaalba.php'))),
+                'upgrade-plugin_' . plugin_basename(CASA_ALBA_HEADLESS_PLUGIN_DIR . 'headless-productoscasaalba.php')
+            );
+            ?>
+            <a href="<?php echo esc_url($update_url); ?>" class="button button-primary" id="casa-alba-update-now">
+                <span class="dashicons dashicons-download" style="vertical-align: middle;"></span>
+                <?php _e('Actualizar Ahora', 'casa-alba-headless-auth'); ?>
+            </a>
+            <?php if ($update_status['release']): ?>
+            <a href="<?php echo esc_url($update_status['release']['html_url']); ?>" target="_blank" class="button">
+                <span class="dashicons dashicons-external" style="vertical-align: middle;"></span>
+                <?php _e('Ver Notas de la Versión', 'casa-alba-headless-auth'); ?>
+            </a>
+            <?php endif; ?>
+            <?php endif; ?>
+        </p>
+
+        <div id="casa-alba-update-result" style="display: none; margin-top: 10px;"></div>
+    </div>
 
     <hr>
 
@@ -314,6 +428,22 @@ function generateSecret() {
         secret += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return secret;
+}
+
+function toggleGitHubToken() {
+    const input = document.getElementById('github_token');
+    const button = event.currentTarget;
+    const icon = button.querySelector('.dashicons');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('dashicons-visibility');
+        icon.classList.add('dashicons-hidden');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('dashicons-hidden');
+        icon.classList.add('dashicons-visibility');
+    }
 }
 </script>
 
