@@ -1,0 +1,126 @@
+/* Casa Alba Headless Auth - Admin Styles */
+
+.casa-alba-stat-card {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    transition: box-shadow 0.3s ease;
+}
+
+.casa-alba-stat-card:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.casa-alba-stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.casa-alba-stat-card .stat-number {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #2271b1;
+    line-height: 1;
+}
+
+.casa-alba-stat-card .stat-description {
+    font-size: 13px;
+    color: #999;
+    margin: 5px 0 0 0;
+}
+
+.casa-alba-chart-container {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    margin-top: 20px;
+}
+
+.casa-alba-chart-container h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2271b1;
+}
+
+/* Settings page styles */
+.form-table th {
+    font-weight: 600;
+}
+
+.form-table td p.description {
+    font-style: italic;
+    color: #666;
+}
+
+/* Sessions table */
+.wp-list-table th,
+.wp-list-table td {
+    vertical-align: middle;
+}
+
+.wp-list-table .button-small {
+    padding: 0 8px;
+    height: 26px;
+    line-height: 24px;
+    font-size: 12px;
+}
+
+/* Responsive grid for stat cards */
+@media (max-width: 768px) {
+    .casa-alba-stat-card .stat-number {
+        font-size: 28px;
+    }
+}
+
+/* Activity chart bars */
+.activity-bar {
+    display: flex;
+    height: 20px;
+    background: #ddd;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.activity-bar-success {
+    background: #46b450;
+    transition: width 0.3s ease;
+}
+
+.activity-bar-failed {
+    background: #dc3232;
+    transition: width 0.3s ease;
+}
+
+/* Loading states */
+.casa-alba-loading {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+.casa-alba-loading::before {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #2271b1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
