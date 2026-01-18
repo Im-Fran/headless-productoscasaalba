@@ -3,7 +3,7 @@
  * Plugin Name: Headless Productos Casa Alba
  * Plugin URI: https://productoscasaalba.cl
  * Description: Plugin completo para frontend headless: autenticación JWT con Cloudflare Turnstile, gestión de sesiones, checkout URLs modificadas, redirección automática al frontend, y APIs personalizadas para clientes y pedidos.
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: Francisco Solis
  * Author URI: https://franciscosolis.cl
  * License: GPL v3
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('CASA_ALBA_HEADLESS_VERSION', '1.2.1');
+define('CASA_ALBA_HEADLESS_VERSION', '1.2.2');
 define('CASA_ALBA_HEADLESS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CASA_ALBA_HEADLESS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -313,7 +313,9 @@ class Casa_Alba_Headless {
         $should_redirect = apply_filters('casa_alba_headless_will_redirect', true, $new_url);
 
         if ($should_redirect) {
-            error_log('Casa Alba Headless: Redirecting to frontend - ' . $new_url);
+            $asn = $this->get_cloudflare_asn();
+            $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : 'Unknown';
+            error_log('Casa Alba Headless: Redirecting to frontend - ' . $new_url . ' | ASN: ' . ($asn ?: 'N/A') . ' | User-Agent: ' . $user_agent);
         	header('Location: ' . $new_url, true, 301);
             exit;
         }
