@@ -29,7 +29,7 @@ class Casa_Alba_Auth_Middleware {
      */
     public function init() {
         // Hook into WordPress authentication
-        add_filter('determine_current_user', array($this, 'authenticate_jwt'), 10);
+        add_filter('determine_current_user', array($this, 'authenticate_jwt'), 0);
         
         // Update session activity on authenticated requests
         add_action('rest_api_init', array($this, 'setup_activity_tracking'));
