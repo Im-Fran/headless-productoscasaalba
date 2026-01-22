@@ -66,9 +66,6 @@ class Casa_Alba_Auth_Middleware {
         // Update session activity on authenticated requests
         add_action('rest_api_init', array($this, 'setup_activity_tracking'));
 
-        // Register debug endpoint
-        add_action('rest_api_init', array($this, 'register_debug_endpoint'));
-
         // Hook into REST authentication errors with priority 999 to run AFTER rest_cookie_check_errors (priority 100)
         // This allows us to clear cookie-related errors when JWT is valid
         add_filter('rest_authentication_errors', array($this, 'handle_rest_authentication_errors'), 999);

@@ -3,7 +3,7 @@
  * Plugin Name: Headless Productos Casa Alba
  * Plugin URI: https://productoscasaalba.cl
  * Description: Plugin completo para frontend headless: autenticación JWT con Cloudflare Turnstile, gestión de sesiones, checkout URLs modificadas, redirección automática al frontend, y APIs personalizadas para clientes y pedidos.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: Francisco Solis
  * Author URI: https://franciscosolis.cl
  * License: GPL v3
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('CASA_ALBA_HEADLESS_VERSION', '1.3.0');
+define('CASA_ALBA_HEADLESS_VERSION', '1.3.1');
 define('CASA_ALBA_HEADLESS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CASA_ALBA_HEADLESS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
