@@ -482,9 +482,7 @@ class Casa_Alba_Auth_API {
         }
 
         // Verify session
-        $session_valid = $this->session_manager->verify_session($token);
-
-        return $session_valid;
+	    return $this->session_manager->verify_session($token);
     }
 
     /**
